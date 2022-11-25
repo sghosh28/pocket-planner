@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% load render_table from django_tables2 %}
+{% load crispy_forms_tags %}
+{% load bootstrap3 %}
+{% load querystring from django_tables2 %}
+{% block content %}
+<h2>Transaction History</h2>
+{% render_table table %}
+<a class="btn btn-primary btn-sm" href="{% url 'add_transaction' %}" role="button">Add Transaction</a>
+<a class="btn btn-primary btn-sm" href="{% url 'add_wallet' %}" role="button">Add Wallet</a>
+<a class="btn btn-primary btn-sm" href="{% url 'add_category' %}" role="button">Add Category</a>
+<a class="btn btn-primary btn-sm" href="{% querystring '_export'='csv' %}" role="button">CSV</a>
+<a class="btn btn-primary btn-sm" href="{% querystring '_export'='xls' %}" role="button">EXCEL</a>
+<a class="btn btn-secondary btn-sm" id="ok" href="" role="button"></a>
+
+{% if filter %}
+<div class='row'>
+<div class="col-md-4" >
+<canvas id="mynewChart" width="50" height="80"></canvas>
+</div>
+<div class="col-md-4 rounded p-3 mb-2 bg-info text-dark bg-opacity-50" style="margin-left:auto">
+
+  <h2>FILTER</h2>
+<form action="" method="get" class="form form-inline">
+  {{ filter.form | crispy }}
+  {% bootstrap_button 'filter' %}
+</form>
+</div>
+</div>
+{% endif %}
+{% comment %} <div class="col-md-4" id="myshow">
+ <canvas id="mynewChart" width="50" height="80"></canvas>
+    </div> {% endcomment %}
+ <script>
+var type = ['doughnut'];
+type.random = function() {
+    return this[Math.floor(Math.random()*this.length)];
+};
+let labels = ['income', 'expense'];
+let raw = [0,0];
+{% for obj in filter.qs %}
+    {% if obj.type == 'income' %}
+        raw[0] += {{ obj.amount }};
+    {% else %}
+        raw[1] += {{ obj.amount }};
+    {% endif %}
+{% endfor %}
+const bal = document.getElementById('ok');
+bal.innerHTML = 'Balance: ' + (raw[0] - raw[1]);
+const ctx = document.getElementById('mynewChart').getContext('2d');
+const myChart = new Chart(ctx, {
+    type: ['doughnut'],
+    data: {
+        labels: labels,
+        datasets: [{
+            label: '# of Votes',
+            data: raw,
+            backgroundColor: [
+                'rgba(255, 99, 132, 1)',
+                'rgba(54, 162, 235, 1)',
+                'rgba(255, 206, 86, 1)',
+                'rgba(75, 192, 192, 1)',
+                'rgba(153, 102, 255, 1)',
+                'rgba(255, 159, 64, 1)'
+            ],
+            borderColor: [
+                'rgba(255, 99, 132, 1)',
+                'rgba(54, 162, 235, 1)',
+                'rgba(255, 206, 86, 1)',
+                'rgba(75, 192, 192, 1)',
+                'rgba(153, 102, 255, 1)',
+                'rgba(255, 159, 64, 1)'
+            ],
+            borderWidth: 1
+        }]
+    },
+    options: {
+        title: {
+            display: true,
+            text: 'Income vs Expense'
+        }
+    }
+});
+</script>
+
+{% endblock %}
